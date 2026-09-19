@@ -23,7 +23,7 @@ select{width:100%;padding:12px;border-radius:10px;border:1px solid #555;backgrou
 .match small{color:#aaa}
 .scoreRow{display:grid;grid-template-columns:54px 1fr 54px;gap:8px;align-items:center;margin-bottom:12px}
 .num{font-family:FUD,Impact,sans-serif;font-size:52px;text-align:center}
-button{border:0;border-radius:10px;cursor:pointer}
+button{border:0;border-radius:10px;cursor:pointer;touch-action: manipulation;}
 .step{height:54px;background:#AF1828;color:white;font-size:28px;font-weight:700}
 .action{width:100%;padding:14px;background:#AF1828;color:#fff;font-family:FUD,Impact,sans-serif;font-size:20px;margin-top:10px}
 .secondary{width:100%;padding:11px;background:#363233;color:#fff;margin-top:8px}
@@ -155,8 +155,8 @@ async function draw(){
   ctx.textAlign="center";
   ctx.textBaseline="middle";
   ctx.font="700 550px FUD, sans-serif";
-  ctx.fillText(String(homeScore),410,1110);
-  ctx.fillText(String(awayScore),670,1110);
+  ctx.fillText(String(homeScore),410,1050);
+  ctx.fillText(String(awayScore),670,1050);
   ctx.font="700 200px FUD, sans-serif";
   ctx.fillText("-",540,1110);
   ctx.restore();
