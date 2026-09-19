@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#171516">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Panthers Half-time</title>
+<style>
+@font-face{font-family:FUD;src:url("assets/FUDGrotesk-Bold.ttf") format("truetype");font-weight:700;font-display:swap}
+:root{--red:#AF1828;--dark:#66131D;--paper:#f5f4f1}
+*{box-sizing:border-box}
+body{margin:0;background:#171516;color:#fff;font-family:Arial,sans-serif;min-height:100vh}
+.app{max-width:1180px;margin:0 auto;padding:18px}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+h1{font-family:FUD,Impact,sans-serif;font-size:30px;letter-spacing:.02em;margin:0}
+.grid{display:grid;grid-template-columns:360px 1fr;gap:22px}
+.panel{background:#242122;border:1px solid #3a3738;border-radius:16px;padding:18px}
+label{display:block;font-size:12px;color:#bbb;margin:0 0 7px;text-transform:uppercase;letter-spacing:.08em}
+select{width:100%;padding:12px;border-radius:10px;border:1px solid #555;background:#111;color:#fff;font-size:16px}
+.match{margin:18px 0 20px}
+.match strong{display:block;font-family:FUD,Impact,sans-serif;font-size:24px;line-height:1.05}
+.match small{color:#aaa}
+.scoreRow{display:grid;grid-template-columns:54px 1fr 54px;gap:8px;align-items:center;margin-bottom:12px}
+.num{font-family:FUD,Impact,sans-serif;font-size:52px;text-align:center}
+button{border:0;border-radius:10px;cursor:pointer}
+.step{height:54px;background:#AF1828;color:white;font-size:28px;font-weight:700}
+.action{width:100%;padding:14px;background:#AF1828;color:#fff;font-family:FUD,Impact,sans-serif;font-size:20px;margin-top:10px}
+.secondary{width:100%;padding:11px;background:#363233;color:#fff;margin-top:8px}
+.previewWrap{display:flex;justify-content:center;align-items:flex-start}
+canvas{width:min(100%,540px);height:auto;display:block;border-radius:10px;background:#eee;box-shadow:0 18px 60px #0008}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.previewWrap{order:-1}.panel{padding:14px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><h1>PANTHERS HALF-TIME</h1></header>
+<div class="grid">
+<section class="panel">
+<label for="match">Partita</label>
+<select id="match"></select>
+<div class="match" id="matchInfo"></div>
+
+<label>Panthers / Casa</label>
+<div class="scoreRow"><button class="step" data-team="home" data-delta="-1">−</button><div class="num" id="homeScore">0</div><button class="step" data-team="home" data-delta="1">+</button></div>
+
+<label>Avversaria / Trasferta</label>
+<div class="scoreRow"><button class="step" data-team="away" data-delta="-1">−</button><div class="num" id="awayScore">0</div><button class="step" data-team="away" data-delta="1">+</button></div>
+
+<button class="action" id="export">ESPORTA PNG</button>
+<button class="secondary" id="reset">AZZERA RISULTATO</button>
+</section>
+
+<section class="previewWrap"><canvas id="canvas" width="1080" height="1920"></canvas></section>
+</div>
+</div>
+
+<script>
+const matches = [{"date": "2026-09-13", "home": "Issese", "away": "Panthers 1977", "homeLogo": "Issese.png", "awayLogo": "Panthers 1977.png"}, {"date": "2026-09-20", "home": "Mombrettese", "away": "Panthers 1977", "homeLogo": "Mombrettese.png", "awayLogo": "Panthers 1977.png"}, {"date": "2026-09-27", "home": "Excelsior", "away": "Panthers 1977", "homeLogo": "Excelsior.png", "awayLogo": "Panthers 1977.png"}, {"date": "2026-10-04", "home": "Panthers 1977", "away": "Monte Cremasco", "homeLogo": "Panthers 1977.png", "awayLogo": "Mone cremasco.png"}, {"date": "2026-10-11", "home": "Casale Cremasco", "away": "Panthers 1977", "homeLogo": "Casale cremasco.png", "awayLogo": "Panthers 1977.png"}, {"date": "2026-10-18", "home": "Panthers 1977", "away": "Spinese Oratorio", "homeLogo": "Panthers 1977.png", "awayLogo": "Spinese oratorio.png"}, {"date": "2026-10-25", "home": "Panthers 1977", "away": "Vailate", "homeLogo": "Panthers 1977.png", "awayLogo": "Vailate.png"}, {"date": "2026-11-01", "home": "Rivoltana", "away": "Panthers 1977", "homeLogo": "Rivoltana.png", "awayLogo": "Panthers 1977.png"}, {"date": "2026-11-08", "home": "Panthers 1977", "away": "Doverese", "homeLogo": "Panthers 1977.png", "awayLogo": "Doversese.png"}, {"date": "2026-11-15", "home": "Trescore", "away": "Panthers 1977", "homeLogo": "Trescore.png", "awayLogo": "Panthers 1977.png"}, {"date": "2026-11-22", "home": "Panthers 1977", "away": "Zelobuonpersico 1974", "homeLogo": "Panthers 1977.png", "awayLogo": "ZELOBUONPERSICO 1974.png"}, {"date": "2026-11-29", "home": "Castelnuovo", "away": "Panthers 1977", "homeLogo": "Castelnuovo.png", "awayLogo": "Panthers 1977.png"}, {"date": "2026-12-06", "home": "Panthers 1977", "away": "Ripaltese", "homeLogo": "Panthers 1977.png", "awayLogo": "Ripaltese.png"}, {"date": "2026-12-13", "home": "Montodinese", "away": "Panthers 1977", "homeLogo": "Montodinese.png", "awayLogo": "Panthers 1977.png"}, {"date": "2026-12-20", "home": "Panthers 1977", "away": "Oratorio Castelleone", "homeLogo": "Panthers 1977.png", "awayLogo": "OratorioCastellone.png"}, {"date": "2027-01-10", "home": "Panthers 1977", "away": "Issese", "homeLogo": "Panthers 1977.png", "awayLogo": "Issese.png"}, {"date": "2027-01-17", "home": "Panthers 1977", "away": "Mombrettese", "homeLogo": "Panthers 1977.png", "awayLogo": "Mombrettese.png"}, {"date": "2027-01-24", "home": "Panthers 1977", "away": "Excelsior", "homeLogo": "Panthers 1977.png", "awayLogo": "Excelsior.png"}, {"date": "2027-01-31", "home": "Monte Cremasco", "away": "Panthers 1977", "homeLogo": "Mone cremasco.png", "awayLogo": "Panthers 1977.png"}, {"date": "2027-02-07", "home": "Panthers 1977", "away": "Casale Cremasco", "homeLogo": "Panthers 1977.png", "awayLogo": "Casale cremasco.png"}, {"date": "2027-02-14", "home": "Spinese Oratorio", "away": "Panthers 1977", "homeLogo": "Spinese oratorio.png", "awayLogo": "Panthers 1977.png"}, {"date": "2027-02-21", "home": "Vailate", "away": "Panthers 1977", "homeLogo": "Vailate.png", "awayLogo": "Panthers 1977.png"}, {"date": "2027-02-28", "home": "Panthers 1977", "away": "Rivoltana", "homeLogo": "Panthers 1977.png", "awayLogo": "Rivoltana.png"}, {"date": "2027-03-07", "home": "Doverese", "away": "Panthers 1977", "homeLogo": "Doversese.png", "awayLogo": "Panthers 1977.png"}, {"date": "2027-03-14", "home": "Panthers 1977", "away": "Trescore", "homeLogo": "Panthers 1977.png", "awayLogo": "Trescore.png"}, {"date": "2027-03-21", "home": "Zelobuonpersico 1974", "away": "Panthers 1977", "homeLogo": "ZELOBUONPERSICO 1974.png", "awayLogo": "Panthers 1977.png"}, {"date": "2027-04-04", "home": "Panthers 1977", "away": "Castelnuovo", "homeLogo": "Panthers 1977.png", "awayLogo": "Castelnuovo.png"}, {"date": "2027-04-11", "home": "Ripaltese", "away": "Panthers 1977", "homeLogo": "Ripaltese.png", "awayLogo": "Panthers 1977.png"}, {"date": "2027-04-18", "home": "Panthers 1977", "away": "Montodinese", "homeLogo": "Panthers 1977.png", "awayLogo": "Montodinese.png"}, {"date": "2027-04-25", "home": "Oratorio Castelleone", "away": "Panthers 1977", "homeLogo": "OratorioCastellone.png", "awayLogo": "Panthers 1977.png"}];
+const bg = new Image();
+const logos = {};
+let homeScore=0, awayScore=0;
+
+function logoPath(name){ return name ? "assets/logos/"+encodeURIComponent(name) : null; }
+
+function loadLogo(name){
+  if(!name) return Promise.resolve(null);
+  if(logos[name]) return Promise.resolve(logos[name]);
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{logos[name]=img;resolve(img)};
+    img.onerror=()=>resolve(null);
+    img.src=logoPath(name);
+  });
+}
+
+const canvas=document.getElementById("canvas"), ctx=canvas.getContext("2d");
+
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = "high";
+const matchSelect=document.getElementById("match");
+
+matches.forEach((m,i)=>{
+  const o=document.createElement("option");
+  o.value=i;
+  o.textContent=`${formatDate(m.date)} — ${m.home} vs ${m.away}`;
+  matchSelect.appendChild(o);
+});
+function selectNextMatch() {
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+
+  const todayString =
+    today.getFullYear() + "-" +
+    String(today.getMonth() + 1).padStart(2, "0") + "-" +
+    String(today.getDate()).padStart(2, "0");
+
+  let selectedIndex = matches.findIndex(match => {
+    return match.date >= todayString;
+  });
+
+  // Se non ci sono più partite in calendario,
+  // manteniamo selezionata l'ultima.
+  if (selectedIndex === -1) {
+    selectedIndex = matches.length - 1;
+  }
+
+  matchSelect.value = selectedIndex;
+}
+selectNextMatch();
+
+function formatDate(s){
+  const [y,m,d]=s.split("-");
+  return `${d}/${m}/${y.slice(2)}`;
+}
+function current(){return matches[Number(matchSelect.value)]}
+let grainCanvas = null;
+
+function createGrain() {
+  grainCanvas = document.createElement("canvas");
+  grainCanvas.width = 1080;
+  grainCanvas.height = 1920;
+
+  const grainCtx = grainCanvas.getContext("2d");
+  const imageData = grainCtx.createImageData(1080, 1920);
+  const data = imageData.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const value = Math.floor(Math.random() * 256);
+
+    data[i] = value;
+    data[i + 1] = value;
+    data[i + 2] = value;
+    data[i + 3] = 255;
+  }
+
+  grainCtx.putImageData(imageData, 0, 0);
+}
+async function draw(){
+  const m=current();
+  document.getElementById("homeScore").textContent=homeScore;
+  document.getElementById("awayScore").textContent=awayScore;
+  document.getElementById("matchInfo").innerHTML=`<strong>${m.home}</strong><small>${formatDate(m.date)} · ${m.away}</small>`;
+  const [hl,al]=await Promise.all([loadLogo(m.homeLogo),loadLogo(m.awayLogo)]);
+  ctx.clearRect(0,0,1080,1920);
+  ctx.drawImage(bg,0,0,1080,1920);
+
+  // These coordinates are the first prototype pass and will be tuned against the PSD/master.
+  drawLogo(hl,105,1050,130,130);
+  drawLogo(al,845,1050,130,130);
+
+  ctx.save();
+  ctx.fillStyle="#f5f4f1";
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+  ctx.font="700 550px FUD, sans-serif";
+  ctx.fillText(String(homeScore),410,1110);
+  ctx.fillText(String(awayScore),670,1110);
+  ctx.font="700 200px FUD, sans-serif";
+  ctx.fillText("-",540,1110);
+  ctx.restore();
+  // GRANA FOTOGRAFICA FINALE
+if (!grainCanvas) {
+  createGrain();
+}
+
+ctx.save();
+ctx.globalCompositeOperation = "soft-light";
+ctx.globalAlpha = 0.35;
+ctx.drawImage(grainCanvas, 0, 0);
+ctx.restore();
+}
+
+function drawLogo(img,x,y,w,h){
+  if(!img)return;
+
+  const ratio = Math.min(
+    w / img.naturalWidth,
+    h / img.naturalHeight
+  );
+
+  const dw = img.naturalWidth * ratio;
+  const dh = img.naturalHeight * ratio;
+
+  ctx.save();
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+
+  ctx.drawImage(
+    img,
+    x + (w - dw) / 2,
+    y + (h - dh) / 2,
+    dw,
+    dh
+  );
+
+  ctx.restore();
+}
+
+document.querySelectorAll(".step").forEach(b=>b.addEventListener("click",()=>{
+  const team=b.dataset.team, delta=Number(b.dataset.delta);
+  if(team==="home") homeScore=Math.max(0,Math.min(99,homeScore+delta));
+  else awayScore=Math.max(0,Math.min(99,awayScore+delta));
+  draw();
+}));
+document.getElementById("reset").addEventListener("click",()=>{homeScore=0;awayScore=0;draw()});
+matchSelect.addEventListener("change",()=>{homeScore=0;awayScore=0;draw()});
+document.getElementById("export").addEventListener("click",()=>{
+  const m=current();
+  const filename=`HALFTIME_${m.date}_${m.home}_vs_${m.away}.png`.replaceAll(" ","_");
+  try {
+    canvas.toBlob(blob=>{
+      if(!blob){ throw new Error("Impossibile creare il PNG"); }
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");
+      a.href=url; a.download=filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1500);
+    },"image/png");
+  } catch(err) {
+    alert("L'esportazione del PNG è stata bloccata dal browser. Nella prossima versione useremo l'app in modalità web, così l'esportazione sarà diretta.\n\nDettaglio: "+err.message);
+  }
+});
+bg.onload=draw;
+bg.src="assets/halftime-background.jpg";
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js")
+      .then(() => {
+        console.log("Panthers Half-time: service worker attivo.");
+      })
+      .catch(error => {
+        console.error("Errore service worker:", error);
+      });
+  });
+}
+</script>
+</body>
+</html>
